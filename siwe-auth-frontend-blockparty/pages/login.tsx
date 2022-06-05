@@ -55,7 +55,7 @@ function Siwe() {
   const { data: session, status } = useSession()
 
   useEffect(() => {
-    axios.get("https://livepeer.com/api/asset", { headers: { "Authorization": "Bearer c1e0d441-8577-44c0-81be-5c80b295d3b9" } })
+    axios.get("https://livepeer.com/api/asset", { headers: { "Authorization": "Bearer " } })
       .then((response) => setMetaData(response.data));
   }, []);
 
