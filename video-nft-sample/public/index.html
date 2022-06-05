@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<!--
+ *  Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree.
+-->
+<html>
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="description" content="WebRTC code samples">
+    <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
+    <meta itemprop="description" content="Client-side WebRTC code samples">
+    <!-- <meta itemprop="image" content="../../../images/webrtc-icon-192x192.png"> -->
+    <meta itemprop="name" content="WebRTC code samples">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta id="theme-color" name="theme-color" content="#ffffff">
+
+    <base target="_blank">
+
+    <title>Select audio and video sources</title>
+
+    <!-- <link rel="icon" sizes="192x192" href="../../../images/webrtc-icon-192x192.png"> -->
+    <link href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="css/main.css">
+
+    <style>
+        div.select {
+            display: inline-block;
+            margin: 0 0 1em 0;
+        }
+
+        p.small {
+            font-size: 0.7em;
+        }
+
+        label {
+            width: 12em;
+            display: inline-block;
+        }
+    </style>
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+    <script src="https://unpkg.com/@livepeer/video-nft@0.3.6/dist/index.umd.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./RecordRTC.js"></script>
+
+    <!-- web streams API polyfill to support Firefox -->
+    <script src="https://unpkg.com/@mattiasbuelens/web-streams-polyfill/dist/polyfill.min.js"></script>
+
+    <!-- ../libs/DBML.js to fix video seeking issues -->
+    <script src="./EBML.js"></script>
+
+    <!-- for Edge/FF/Chrome/Opera/etc. getUserMedia support -->
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="./DetectRTC.js"> </script>
+
+    <!-- video element -->
+    <link href="./getHTMLMediaElement.css" rel="stylesheet">
+    <script src="./getHTMLMediaElement.js"></script>
+    <script src="./main.js" async></script>
+
+
+
+</head>
+
+<body>
+    <div class="left">
+        <div id="startButton" class="button">
+            Start Recording
+        </div>
+        <h2>Preview</h2>
+        <video id="preview" width="160" height="120" autoplay muted></video>
+    </div>
+
+    <div class="right">
+        <div id="stopButton" class="button">
+            Stop Recording
+        </div>
+        <h2>Recording</h2>
+        <video id="video-tag" width="160" height="120" controls></video>
+        <a id="downloadButton" class="button">
+            Download
+        </a>
+    </div>
+
+    <div style="text-align:center;display: block; margin-left: auto; margin-right: auto" class="select"
+        style="display:block;"></div>
+    <!-- <label for="videoSource">Video source: </label> -->
+    <select id="videoSource"></select>
+    </div>
+    <div>
+        <textarea id="log"></textarea>
+    </div>
+    <div class="relative flex min-h-screen flex-col justify-center overflow-hidden dark:bg-[#161618] py-6 sm:py-12">
+        <div
+            class="relative bg-[#1c1c1f] px-6 pt-10 pb-8 shadow-xl ring-1 ring-gray-900/5 sm:mx-auto sm:max-w-lg sm:rounded-lg sm:px-10 w-9/12">
+            <div class="mx-auto max-w-md">
+                <div class=" text-base font-semibold leading-7">
+                    <p class="text-white">Upload Video</p>
+                </div>
+                <div class="divide-y divide-gray-300/50">
+                    <div class="space-y-6 py-8 text-base leading-7 text-white">
+
+
+                        <div class="mb-4">
+                            <label class="" for="title">
+                                NFT Title
+                            </label>
+                            <input
+                                class="shadow bg-transparent  border rounded w-full py-2 px-3 text-[#00eb88] leading-tight focus:outline-none focus:shadow-outline"
+                                id="title" type="text" placeholder="NFT Title">
+                        </div>
+
+                        <!-- <video controls id="video-tag-ori"> -->
+                        <!-- <source id="video-source" src="splashVideo"> -->
+                        <!-- Your browser does not support the video tag. -->
+                        <!-- </video> -->
+
+                        <!-- 
+                        <div class=" text-base font-semibold leading-7">
+                            <p class="text-white">Attach Video</p>
+                        </div>
+                        <section id="drop-area"
+                            class="outline-dashed outline-2 outline-offset-2 outline-white p-2 rounded-md  justify-center h-32 w-full">
+                            <input class="h-32 w-full" type="file" id="file" accept="video/mp4"
+                                onchange="handleFiles(this.files)" style="display:none">
+                            <p>Drag and Drop Here</p>
+                            <label for="file">Upload</label>
+                        </section>
+                    -->
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                            <div id="progress-bar"
+                                class="transition-all ease-out duration-1000 bg-[#00eb88] h-2.5 rounded-full"
+                                style="width:0%"></div>
+                        </div>
+                        <!--
+                        <div class=" text-base  leading-7">
+                            <p class="text-white">Accepted Video Files Type 🎥📁 : <span class="text-[#00eb88] ">.mp4
+                                    only</span></p>
+                            <p class="text-white">Accepted Chain ⛓️: <span class="text-[#8e7ee3]">Polygon
+                                    blockchain</span></p>
+                        </div> 
+                      -->
+                        <button id="mint-btn"
+                            class="bg-transparent hover:bg-[#00eb88] text-[#00eb88]  font-semibold hover:text-white py-2 px-4 border border-[#00eb88]  hover:border-transparent rounded w-full"
+                            onClick="mintNft()">Mint</button>
+
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let preview = document.getElementById("preview");
+        let recording = document.getElementById("video-tag");
+        let startButton = document.getElementById("startButton");
+        let stopButton = document.getElementById("stopButton");
+        let downloadButton = document.getElementById("downloadButton");
+        let logElement = document.getElementById("log");
+
+        let recordingTimeMS = 10000;
+
+        function log(msg) {
+            logElement.innerHTML += msg + "\n";
+        }
+
+        function wait(delayInMS) {
+            return new Promise(resolve => setTimeout(resolve, delayInMS));
+        }
+
+        function startRecording(stream, lengthInMS) {
+            let recorder = new MediaRecorder(stream);
+            let data = [];
+
+            recorder.ondataavailable = event => data.push(event.data);
+            recorder.start();
+            log(recorder.state + " for " + (lengthInMS / 1000) + " seconds...");
+
+            let stopped = new Promise((resolve, reject) => {
+                recorder.onstop = resolve;
+                recorder.onerror = event => reject(event.name);
+            });
+
+            let recorded = wait(lengthInMS).then(
+                () => recorder.state == "recording" && recorder.stop()
+            );
+
+            return Promise.all([
+                    stopped,
+                    recorded
+                ])
+                .then(() => data);
+        }
+
+        function stop(stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+
+        startButton.addEventListener("click", function () {
+            navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true
+                }).then(stream => {
+                    preview.srcObject = document.getElementById('preview').captureStream();
+                    console.log(stream)
+                    downloadButton.href = stream;
+                    preview.captureStream = preview.captureStream || preview.mozCaptureStream;
+                    return new Promise(resolve => preview.onplaying = resolve);
+                }).then(() => startRecording(preview.captureStream(), recordingTimeMS))
+                .then(recordedChunks => {
+                    let recordedBlob = new Blob(recordedChunks, {
+                        type: "video/webm"
+                    });
+                    recording.src = URL.createObjectURL(recordedBlob);
+                    downloadButton.href = recording.src;
+                    downloadButton.download = "RecordedVideo.webm";
+
+                    log("Successfully recorded " + recordedBlob.size + " bytes of " +
+                        recordedBlob.type + " media.");
+                })
+                .catch((error) => {
+                    if (error.name === "NotFoundError") {
+                        log("Camera or microphone not found. Can't record.");
+                    } else {
+                        log(error);
+                    }
+                });
+        }, false);
+
+
+
+        stopButton.addEventListener("click", function () {
+            stop(preview.srcObject);
+        }, false);
+    </script>
+
+    <script type="text/javascript" src="js/ui.js"></script>
+    <script type="text/javascript" src="js/sdk.js"></script>
+</body>
+
+</html>
